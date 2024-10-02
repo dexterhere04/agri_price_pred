@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predicted Pulse Prices</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+  <!-- Navbar -->
+  <nav class="bg-green-600 p-4">
+    <div class="container mx-auto">
+      <a href="#" class="text-white text-xl font-bold">Pulse Price Predictor</a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container mx-auto mt-10">
+    <!-- Dropdown Section for Selecting Pulse -->
+    <div class="flex justify-center">
+      <div class="bg-white shadow-md rounded-lg p-6 w-full md:w-3/4 lg:w-1/2">
+        <h4 class="text-center text-2xl text-green-600 font-semibold">Select Pulse for Price Prediction</h4>
+        <div class="mt-4 text-center">
+          <select id="pulseDropdown" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-green-600 w-full md:w-1/2">
+            <option value="" selected disabled>Select a pulse...</option>
+            <!-- Dynamically populate options with pulse names -->
+            <option value="pigeon_pea">Pigeon Pea</option>
+            <option value="chickpea">Chickpea</option>
+            <option value="lentil">Lentil</option>
+            <option value="black_gram">Black Gram</option>
+            <option value="green_gram">Green Gram</option>
+            <!-- Add the rest of the pulses here... -->
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Section -->
+    <div id="summarySection" class="hidden mt-10 flex justify-center">
+      <div class="bg-white shadow-md rounded-lg p-6 w-full md:w-3/4 lg:w-1/2">
+        <h4 class="text-center text-2xl text-green-600 font-semibold" id="pulseName">Predicted Prices for <span id="selectedPulse">Pulse</span></h4>
+        <p class="text-center mt-4 text-gray-700"><strong>From:</strong>{{ from_date }}</p>
+        <p class="text-center mb-4 text-gray-700"><strong>To:</strong>{{ to_date }}</p>
+      </div>
+    </div>
+
+    <!-- Predicted Prices Table -->
+    <div id="pricesTableSection" class="hidden mt-10 flex justify-center">
+      <div class="bg-white shadow-md rounded-lg p-6 w-full md:w-3/4 lg:w-2/3">
+        <h4 class="text-center text-2xl text-green-600 font-semibold mb-4">Predicted Prices</h4>
+        <div class="overflow-x-auto">
+          <table class="min-w-full table-auto">
+            <thead>
+              <tr class="bg-green-600 text-white">
+                <th class="px-4 py-2">Date</th>
+                <th class="px-4 py-2">Predicted Price (₹)</th>
+              </tr>
+            </thead>
+            <tbody class="text-center text-gray-700" id="pricesTableBody">
+              <!-- Rows will be dynamically generated -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex justify-center space-x-4 mt-6">
+          <button class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">
+            Export as CSV
+          </button>
+          <button class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">
+            Download as PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div id="chartSection" class="hidden mt-10 flex justify-center">
+      <div class="bg-white shadow-md rounded-lg p-6 w-full md:w-3/4 lg:w-2/3">
+        <h4 class="text-center text-2xl text-green-600 font-semibold mb-4">Price Trend Chart</h4>
+        <div id="priceChart" class="h-64"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-green-600 text-white text-center p-4 mt-10">
+    <p>&copy; 2024 Pulse Price Predictor. All rights reserved.</p>
+  </footer>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const pulseDropdown = document.getElementById('pulseDropdown');
+    const summarySection = document.getElementById('summarySection');
+    const pricesTableSection = document.getElementById('pricesTableSection');
+    const chartSection = document.getElementById('chartSection');
+    const pricesTableBody = document.getElementById('pricesTableBody');
+    const priceChartElement = document.getElementById('priceChart');
+
+    pulseDropdown.addEventListener('change', async function() {
+      const selectedPulse = pulseDropdown.value;
+      
+      if (selectedPulse) {
+        // Fetch pulse data using AJAX
+        try {
+          const response = await fetch(`/get_pulse_data?pulse=${selectedPulse}`);
+          const pulseData = await response.json();
+
+          // Check for errors
+          if (pulseData.error) {
+            alert(pulseData.error);
+            return;
+          }
+
+          // Update the summary section
+          document.getElementById('selectedPulse').textContent = pulseData.name;
+          summarySection.classList.remove('hidden');
+          
+          // Update the prices table
+          pricesTableBody.innerHTML = ''; // Clear existing rows
+          pulseData.dates.forEach((date, index) => {
+            const row = `<tr class="border-b">
+                          <td class="px-4 py-2">${date}</td>
+                          <td class="px-4 py-2">₹ ${pulseData.prices[index]}</td>
+                        </tr>`;
+            pricesTableBody.insertAdjacentHTML('beforeend', row);
+          });
+          pricesTableSection.classList.remove('hidden');
+          
+          // Update
+          // Update the chart
+          chartSection.classList.remove('hidden');
+          if (window.priceChart) {
+            window.priceChart.destroy(); // Clear the previous chart
+          }
+          window.priceChart = new Chart(priceChartElement.getContext('2d'), {
+            type: 'line',
+            data: {
+              labels: pulseData.dates,
+              datasets: [{
+                label: 'Predicted Price (₹)',
+                data: pulseData.prices,
+                backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                borderColor: '#28a745',
+                borderWidth: 2,
+                fill: true
+              }]
+            },
+            options: {
+              responsive: true,
+              scales: {
+                y: {
+                  beginAtZero: false
+                }
+              }
+            }
+          });
+        } catch (error) {
+          
+        }
+      }
+    });
+  </script>
+</body>
+</html>

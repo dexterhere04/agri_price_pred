@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Date Picker with Calendar Navigation</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .highlight {
+      background-color: #90cdf4;
+      border-radius: 0%;
+      color: white;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+  <!-- Navbar -->
+  <nav class="bg-blue-600 p-4 shadow-lg">
+    <div class="container mx-auto flex justify-between items-center">
+      <a href="#" class="text-white font-bold text-xl">Date Selector</a>
+      <div class="space-x-4">
+        <a href="#" class="text-white hover:bg-blue-500 px-3 py-2 rounded transition duration-300">Home</a>
+        <a href="#" class="text-white hover:bg-blue-500 px-3 py-2 rounded transition duration-300">About</a>
+        <a href="#" class="text-white hover:bg-blue-500 px-3 py-2 rounded transition duration-300">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container mx-auto mt-10 p-5 bg-white rounded-lg shadow-lg">
+    <h2 class="text-2xl font-bold mb-5">Select Date Range</h2>
+    
+    <!-- Date Inputs -->
+    <form method="POST">
+      {% csrf_token %}
+      <div class="flex space-x-4 mb-5">
+        <div>
+          <label for="from-date" class="block text-sm font-medium text-gray-700">From Date</label>
+          <input type="date" id="from-date" name="from_date" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        </div>
+        <div>
+          <label for="to-date" class="block text-sm font-medium text-gray-700">To Date</label>
+          <input type="date" id="to-date" name="to_date" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        </div>
+      </div>
+      
+      <!-- Calendar Display -->
+      <div id="calendar" class="mt-5"></div>
+
+      <!-- Navigation Buttons -->
+      <div class="flex justify-between mt-5">
+        <button id="prev-btn" class="bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded">Prev</button>
+        <button id="next-btn" class="bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded">Next</button>
+      </div>
+      <div class="flex justify-between mt-5">
+        <button type="submit" class="bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded">Submit Dates</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- JavaScript code will be moved to a separate file -->
+  {% block script %}
+  <script src="{% static 'home/script.js' %}"></script>
+  {% endblock %}
+</body>
+</html>
